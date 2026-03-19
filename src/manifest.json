@@ -1,0 +1,44 @@
+{
+  "name": "Mark Help",
+  "description": "Market Helper Extension for data analyzing",
+  "author": "phalvinayak@gmail.com",
+  "version": "1.0",
+  "manifest_version": 3,
+  "incognito": "split",
+  "action": {
+    "default_popup": "static/html/popup.html",
+    "default_icon": "static/images/icon-128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "*.js",
+        "*.json",
+        "static/images/*.png",
+        "static/icons/*.svg"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "options_ui": {
+    "page": "static/html/options_ui.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "static/images/icon-16.png",
+    "32": "static/images/icon-32.png",
+    "48": "static/images/icon-48.png",
+    "128": "static/images/icon-128.png"
+  },
+  "permissions": ["storage"],
+  "background": {
+    "service_worker": "./background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://web.sensibull.com/*"],
+      "css": ["./static/styles/sensibull.css"],
+      "js": ["./static/scripts/sensibull.js"]
+    }
+  ]
+}

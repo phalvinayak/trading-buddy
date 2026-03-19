@@ -1,0 +1,15 @@
+.mark-help-sm-analysis-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 1rem;
+  font-family: sans-serif;
+}
+.mark-help-sm-analysis-table th,
+.mark-help-sm-analysis-table td {
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  text-align: right;
+}
+.mark-help-sm-analysis-table th {
+  background-color: #f3f3f3;
+}

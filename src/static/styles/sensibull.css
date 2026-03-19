@@ -1,0 +1,281 @@
+.MH_EXT_analyze_button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  background: #007bff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.MH_EXT_overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
+.MH_EXT_popup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  background: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 300px;
+}
+
+.MH_EXT_popup_title {
+  margin: 0 0 16px;
+}
+
+.MH_EXT_button {
+  margin: 16px 12px 0 0;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background: #6c757d;
+  color: #fff;
+  cursor: pointer;
+}
+
+.MH_EXT_time_select {
+  padding: 8px 16px;
+  border: 1px solid #6c757d;
+  border-radius: 4px;
+  margin-right: 12px;
+  height: 36px;
+  cursor: pointer;
+}
+
+.MH_EXT_fetch_button {
+  background: #007bff;
+  color: #fff;
+}
+
+.MH_EXT_table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.MH_EXT_table th,
+.MH_EXT_table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.MH_EXT_table th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+
+.MH_EXT_table tr:hover {
+  background: #f9f9f9;
+}
+
+.MH_EXT_table .bullish {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.MH_EXT_table .bearish {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.MH_EXT_market_wrapper {
+  margin: 0 24px 16px;
+  padding: 20px;
+  border: 1px solid rgb(216, 220, 227);
+  border-radius: 12px;
+  background-color: #fff;
+}
+
+.MH_EXT_market_view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.MH_EXT_stock_card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.MH_EXT_stock_card.bullish {
+  background: #dcfce7;
+}
+
+.MH_EXT_stock_card.bearish {
+  background: #fee2e2;
+}
+
+.MH_EXT_card_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.MH_EXT_card_header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.MH_EXT_weight_pill {
+  display: inline-block;
+  padding: 2px 8px;
+  margin: 0 8px;
+  background: #e5e7eb;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.MH_EXT_badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.MH_EXT_badge.bullish {
+  color: #fff;
+  background: #16a34a;
+}
+
+.MH_EXT_badge.bearish {
+  color: #fff;
+  background: #dc2626;
+}
+
+.MH_EXT_card_body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.MH_EXT_stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.MH_EXT_label {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.MH_EXT_value {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.MH_EXT_sentiment_score {
+  margin-left: 15px;
+  font-weight: bold;
+}
+
+.MH_EXT_sentiment_score.positive {
+  color: #10b981;
+}
+
+.MH_EXT_sentiment_score.negative {
+  color: #ef4444;
+}
+
+.MH_EXT_sentiment_score.neutral {
+  color: #6b7280;
+}
+
+.MH_EXT_market_hunt {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.MH_EXT_hunt_list {
+  flex: 1;
+  list-style: none;
+  padding: 16px;
+  margin: 0;
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.MH_EXT_hunt_list:first-child {
+  background: #dcfce7;
+}
+
+.MH_EXT_hunt_list:last-child {
+  background: #fee2e2;
+}
+
+.MH_EXT_hunt_item {
+  padding: 10px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.MH_EXT_hunt_symbol {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 6px;
+  color: #1a1a1a;
+  text-decoration: none;
+  display: block;
+}
+
+.MH_EXT_hunt_symbol:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.MH_EXT_hunt_details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.MH_EXT_batch_timings {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.MH_EXT_batch_timings span {
+  padding: 6px 12px;
+  background: #6b7280;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+}
