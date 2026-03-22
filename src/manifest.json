@@ -1,6 +1,6 @@
 {
-  "name": "Mark Help",
-  "description": "Market Helper Extension for data analyzing",
+  "name": "Trading Buddy",
+  "description": "Trading Buddy Chrome Extension for sensibull data analyzing",
   "author": "phalvinayak@gmail.com",
   "version": "1.0",
   "manifest_version": 3,

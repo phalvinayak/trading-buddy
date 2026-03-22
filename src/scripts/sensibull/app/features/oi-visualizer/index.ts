@@ -25,8 +25,12 @@ function updateColor(el: Element) {
   const putOI = parseOIValue(putText);
   const diff = putOI - callOI;
 
-  (el as HTMLElement).style.backgroundColor =
-    diff > 0 ? "#106a26" : diff < 0 ? "#924148" : "";
+  const style = (el as HTMLElement).style;
+  style.backgroundColor = diff > 0 ? "#106a26" : diff < 0 ? "#924148" : "";
+  style.padding = "3px 10px";
+  el.querySelectorAll("div p").forEach((p) => {
+    (p as HTMLElement).style.color = diff !== 0 ? "#fff" : "";
+  });
 }
 
 export function visualizeOiChange() {

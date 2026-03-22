@@ -108,12 +108,25 @@ export function getSurroundingStrikes(
   return strikeList.slice(start, end);
 }
 
+export function getAllOMTPutStrikes(
+  strikeList: number[],
+  targetStrike: number,
+): number[] {
+  const index = strikeList.indexOf(targetStrike);
+  // Skipping first 8 strikes
+  return strikeList.slice(index+7, strikeList.length);
+}
+
 export function formatIndianNumber(num: number): string {
   const abs = Math.abs(num);
   const sign = num < 0 ? "-" : "";
   if (abs >= 10000000) return sign + (abs / 10000000).toFixed(2) + "Cr";
   if (abs >= 100000) return sign + (abs / 100000).toFixed(2) + "L";
   return num.toLocaleString("en-IN");
+}
+
+export function getPercentageChange(old: number, current: number): number {
+  return Math.round(Math.abs(current - old) / old * 10000) / 100;
 }
 
 export type TAnalysis = {
@@ -146,6 +159,22 @@ export type THuntAnalysis = {
   bearGapOiChange: number;
   bearGapOiChangePct: number;
 };
+
+export type TOTMHuntAnalysis = {
+  symbol: string;
+  price: number;
+  prevClose: number;
+  changePct: number;
+  atmStrike: number;
+  highestPutOiChange: number;
+  highestCallOiChange: number;
+  highestCallOiChangeStrike: number;
+  highestPutOiChangeStrike: number;
+  bullGapOiChange: number;
+  bullGapOiChangePct: number;
+  bearGapOiChange: number;
+  bearGapOiChangePct: number;
+}
 
 export function parseResponse(response: OIChangeResponse): TAnalysis {
   const { payload } = response;

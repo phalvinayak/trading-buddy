@@ -42,3 +42,10 @@ export function getExpiriesFromDOM() {
 
   return expiries;
 }
+
+export function getMonthlyExpiries() {
+  const expiries = getExpiriesFromDOM();
+  return Object.keys(expiries)
+    .filter((date) => !expiries[date].is_weekly)
+    .sort();
+}

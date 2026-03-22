@@ -1,130 +1,147 @@
 import { fetchStockOIChange } from "@src/scripts/sensibull/app/dataFetch";
+import { getMonthlyExpiries } from "@src/scripts/sensibull/app/htmlParser";
 import {
-  getSurroundingStrikes,
+  formatIndianNumber,
+  getAllOMTPutStrikes,
+  getPercentageChange,
   type OIChangeResponse,
-  type THuntAnalysis,
+  type TOTMHuntAnalysis,
 } from "@src/scripts/sensibull/app/utils";
 import { F_N_O_STOCKS } from "@src/scripts/sensibull/data/niftyStocks";
 
-function analyzeMarketHunt(response: OIChangeResponse): THuntAnalysis {
+const T_OTM_HUNT_STORAGE = "otmMarketHuntResults";
+
+function analyzeMarketHunt(response: OIChangeResponse): TOTMHuntAnalysis {
   const { payload } = response;
   const { strike_list, per_strike_data, atm_strike: atmStrike } = payload;
 
-  const strikesList = getSurroundingStrikes(strike_list, atmStrike);
-  const huntingData: THuntAnalysis = {
+  const strikesList = getAllOMTPutStrikes(strike_list, atmStrike);
+  console.log("OTM PUT strike", atmStrike, strikesList);
+  const huntingData: TOTMHuntAnalysis = {
     symbol: payload.input.underlying,
     price: payload.current_ltp,
+    prevClose: payload.from_ltp,
+    changePct: getPercentageChange(payload.from_ltp, payload.current_ltp),
     atmStrike,
-    highestCallOi: 0,
-    highestCallOiStrike: 0,
-    highestCallOiChange: 0,
-    highestCallOiChangeStrike: 0,
-    highestPutOi: 0,
-    highestPutOiStrike: 0,
     highestPutOiChange: 0,
     highestPutOiChangeStrike: 0,
-    bullGapOi: 0,
+    highestCallOiChange: 0,
+    highestCallOiChangeStrike: 0,
     bullGapOiChange: 0,
-    bullGapOiPct: 0,
     bullGapOiChangePct: 0,
-    bearGapOi: 0,
     bearGapOiChange: 0,
-    bearGapOiPct: 0,
     bearGapOiChangePct: 0,
   };
   strikesList.forEach((strike) => {
     const strikeKey = Number(strike).toString();
-    if (per_strike_data[strikeKey].from_call_oi && per_strike_data[strikeKey].to_call_oi) {
-      if (per_strike_data[strikeKey].to_call_oi > huntingData.highestCallOi) {
-        huntingData.highestCallOi = per_strike_data[strikeKey].to_call_oi;
-        huntingData.highestCallOiStrike = strike;
+    if (per_strike_data[strikeKey]) {
+      if (
+        per_strike_data[strikeKey].from_call_oi &&
+        per_strike_data[strikeKey].to_call_oi
+      ) {
+        const callOiChange =
+          per_strike_data[strikeKey].to_call_oi -
+          per_strike_data[strikeKey].from_call_oi;
+        if (callOiChange > huntingData.highestCallOiChange) {
+          huntingData.highestCallOiChange = callOiChange;
+          huntingData.highestCallOiChangeStrike = strike;
+        }
       }
-      const callOiChange = per_strike_data[strikeKey].to_call_oi - per_strike_data[strikeKey].from_call_oi;
-      if (callOiChange > huntingData.highestCallOiChange) {
-        huntingData.highestCallOiChange = callOiChange;
-        huntingData.highestCallOiChangeStrike = strike;
-      }
-    }
-    if (per_strike_data[strikeKey].from_put_oi && per_strike_data[strikeKey].to_put_oi) {
-      if (per_strike_data[strikeKey].to_put_oi > huntingData.highestPutOi) {
-        huntingData.highestPutOi = per_strike_data[strikeKey].to_put_oi;
-        huntingData.highestPutOiStrike = strike;
-      }
-      const putOiChange = per_strike_data[strikeKey].to_put_oi - per_strike_data[strikeKey].from_put_oi;
-      if (putOiChange > huntingData.highestPutOiChange) {
-        huntingData.highestPutOiChange = putOiChange;
-        huntingData.highestPutOiChangeStrike = strike;
+      if (
+        per_strike_data[strikeKey].from_put_oi &&
+        per_strike_data[strikeKey].to_put_oi
+      ) {
+        const putOiChange =
+          per_strike_data[strikeKey].to_put_oi -
+          per_strike_data[strikeKey].from_put_oi;
+        if (putOiChange > huntingData.highestPutOiChange) {
+          huntingData.highestPutOiChange = putOiChange;
+          huntingData.highestPutOiChangeStrike = strike;
+        }
       }
     }
   });
 
   const price = huntingData.price;
-  huntingData.bullGapOi = huntingData.highestPutOiStrike - price;
-  huntingData.bullGapOiPct = (huntingData.bullGapOi / price) * 100;
   huntingData.bullGapOiChange = huntingData.highestPutOiChangeStrike - price;
   huntingData.bullGapOiChangePct = (huntingData.bullGapOiChange / price) * 100;
 
-  huntingData.bearGapOi = price - huntingData.highestCallOiStrike;
-  huntingData.bearGapOiPct = (huntingData.bearGapOi / price) * 100;
   huntingData.bearGapOiChange = price - huntingData.highestCallOiChangeStrike;
   huntingData.bearGapOiChangePct = (huntingData.bearGapOiChange / price) * 100;
 
   return huntingData;
 }
 
-function renderMarketHunt(
-  data: Record<string, THuntAnalysis>,
-  container: HTMLElement,
-  timingsContainer: HTMLElement,
-  timestamps?: Record<string, number>,
-  analysisType: string = "oiChange",
-  sortBy: string = "symbol",
-) {
-  const byOiChange = analysisType === "oiChange";
+type RenderMarketHuntParams = {
+  data: Record<string, TOTMHuntAnalysis>;
+  container: HTMLElement;
+  timingsContainer: HTMLElement;
+  timestamps?: Record<string, number>;
+  sortBy?: string;
+  expiry: string;
+};
+
+function renderMarketHunt({
+  data,
+  container,
+  timingsContainer,
+  timestamps,
+  sortBy = "symbol",
+  expiry,
+}: RenderMarketHuntParams) {
   const stocks = Object.keys(data);
-  const bullCase: THuntAnalysis[] = [];
-  const bearCase: THuntAnalysis[] = [];
+  const bullCase: TOTMHuntAnalysis[] = [];
+  const bearCase: TOTMHuntAnalysis[] = [];
   stocks.forEach((stock) => {
     const stockData = data[stock];
-    const putStrike = byOiChange ? stockData.highestPutOiChangeStrike : stockData.highestPutOiStrike;
-    const callStrike = byOiChange ? stockData.highestCallOiChangeStrike : stockData.highestCallOiStrike;
+    const putStrike = stockData.highestPutOiChangeStrike;
+    const callStrike = stockData.highestCallOiChangeStrike;
     if (putStrike > stockData.atmStrike && putStrike > stockData.price) {
       bullCase.push(stockData);
-    } else if (callStrike < stockData.atmStrike && putStrike < stockData.price) {
+    }
+    if (callStrike < stockData.atmStrike && putStrike < stockData.price) {
       bearCase.push(stockData);
     }
   });
 
-  if (bullCase.length === 0 && bearCase.length === 0) {
-    return;
-  }
-
-  const sortFn = (a: THuntAnalysis, b: THuntAnalysis, isBull: boolean) => {
+  const sortFn = (
+    a: TOTMHuntAnalysis,
+    b: TOTMHuntAnalysis,
+    isBull: boolean,
+  ) => {
     if (sortBy === "gap") {
-      const gapA = isBull ? (byOiChange ? a.bullGapOiChangePct : a.bullGapOiPct) : (byOiChange ? a.bearGapOiChangePct : a.bearGapOiPct);
-      const gapB = isBull ? (byOiChange ? b.bullGapOiChangePct : b.bullGapOiPct) : (byOiChange ? b.bearGapOiChangePct : b.bearGapOiPct);
+      const gapA = isBull ? a.bullGapOiChangePct : a.bearGapOiChangePct;
+      const gapB = isBull ? b.bullGapOiChangePct : b.bearGapOiChangePct;
       return gapB - gapA;
+    }
+    if (sortBy === "volume") {
+      const volA = isBull ? a.highestPutOiChange : a.highestCallOiChange;
+      const volB = isBull ? b.highestPutOiChange : b.highestCallOiChange;
+      return volB - volA;
+    }
+    if (sortBy === "changePct") {
+      return Math.abs(b.changePct) - Math.abs(a.changePct);
     }
     return a.symbol.localeCompare(b.symbol);
   };
 
-  container.innerHTML = "";
-  timingsContainer.innerHTML = "";
+  // Build new content off-DOM to avoid any intermediate empty state
+  const fragment = document.createDocumentFragment();
 
   if (timestamps) {
     timingsContainer.innerHTML = Object.entries(timestamps)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([batch, time]) => {
         const date = new Date(time);
-        const formatted = `${date.getDate()} ${date.toLocaleString('en', { month: 'short' })} ${date.toLocaleTimeString()}`;
-        return `<span>${batch.replace('batch', 'Batch ')}: ${formatted}</span>`;
+        const formatted = `${date.getDate()} ${date.toLocaleString("en", { month: "short" })} ${date.toLocaleTimeString()}`;
+        return `<span>${batch.replace("batch", "Batch ")}: ${formatted}</span>`;
       })
       .join("");
   }
 
-  const createList = (items: THuntAnalysis[], isBull: boolean) => {
+  const createList = (items: TOTMHuntAnalysis[], isBull: boolean) => {
     const list = document.createElement("ul");
-    list.className = "MH_EXT_hunt_list";
+    list.className = `MH_EXT_hunt_list ${isBull ? "bull" : "bear"}`;
 
     if (items.length === 0) {
       list.innerHTML = "<li>No records found</li>";
@@ -137,31 +154,39 @@ function renderMarketHunt(
       const listItem = document.createElement("li");
       listItem.className = "MH_EXT_hunt_item";
       const highestOi = isBull
-        ? (byOiChange ? item.highestPutOiChangeStrike : item.highestPutOiStrike)
-        : (byOiChange ? item.highestCallOiChangeStrike : item.highestCallOiStrike);
-      const gap = isBull ? (byOiChange ? item.bullGapOiChange : item.bullGapOi) : (byOiChange ? item.bearGapOiChange : item.bearGapOi);
-      const gapPct = isBull ? (byOiChange ? item.bullGapOiChangePct : item.bullGapOiPct) : (byOiChange ? item.bearGapOiChangePct : item.bearGapOiPct);
+        ? item.highestPutOiChangeStrike
+        : item.highestCallOiChangeStrike;
+      const highestVolume = isBull
+        ? item.highestPutOiChange
+        : item.highestCallOiChange;
+      const gap = isBull ? item.bullGapOiChange : item.bearGapOiChange;
+      const gapPct = isBull ? item.bullGapOiChangePct : item.bearGapOiChangePct;
       listItem.innerHTML = `
         <a href="/open-interest/oi-change-vs-strike?tradingsymbol=${item.symbol}" class="MH_EXT_hunt_symbol">${item.symbol}</a>
         <div class="MH_EXT_hunt_details">
-          <span>Current price: ${item.price}</span>
-          <span>ATM Strike: ${item.atmStrike}</span>
-          <span>${byOiChange ? 'Max OI Chg Strike' : 'Max OI Strike'}: ${highestOi}</span>
+          <span>LTP: ${item.price.toLocaleString("en-IN")} 
+            (
+              <span class="MH_EXT_change_pct ${item.changePct >= 0 ? "positive" : "negative"}">
+                ${item.changePct}%
+              </span>
+            )
+          </span>
+          <span>ATM Strike: ${item.atmStrike.toLocaleString("en-IN")}</span>
+          <span>OTM Strike: ${highestOi}</span>
+          <span>Strike Volume: ${formatIndianNumber(highestVolume)}</span>
           <span>Price Gap: ${gap.toFixed(2)} (${gapPct.toFixed(2)}%)</span>
+          <span><a href="/option-chain?view=ltp&tradingsymbol=${item.symbol}&expiry=${expiry}">${item.symbol} Option Chain </a></span>
         </div>
       `;
-      const link = listItem.querySelector("a");
-      link?.addEventListener("click", (e) => {
-        e.preventDefault();
-        window.location.href = `/open-interest/oi-change-vs-strike?tradingsymbol=${item.symbol}`;
-      });
       list.appendChild(listItem);
     });
     return list;
   };
 
-  container.appendChild(createList(bullCase, true));
-  container.appendChild(createList(bearCase, false));
+  fragment.appendChild(createList(bullCase, true));
+
+  // Single swap: replace all children at once
+  container.replaceChildren(fragment);
 }
 
 export function marketHunt() {
@@ -190,26 +215,28 @@ export function marketHunt() {
   clearButton.textContent = "Clear Data";
   clearButton.className = "MH_EXT_button";
   clearButton.onclick = () => {
-    localStorage.removeItem("marketHuntResults");
+    localStorage.removeItem(T_OTM_HUNT_STORAGE);
     container.innerHTML = "";
     timingsContainer.innerHTML = "";
   };
 
-  const settings = JSON.parse(localStorage.getItem("marketHuntSettings") || '{"analysis":"oiChange","sort":"symbol"}');
+  const settings = JSON.parse(
+    localStorage.getItem("marketHuntSettings") ||
+      '{"analysis":"oiChange","sort":"symbol","showSavedResults":false}',
+  );
 
-  const analysisSelect = document.createElement("select");
-  analysisSelect.className = "MH_EXT_time_select";
-  analysisSelect.innerHTML = `
-    <option value="oiChange">Analysis by OI Change</option>
-    <option value="oi">Analysis by OI</option>
-  `;
-  analysisSelect.value = settings.analysis;
+  let showSavedResults = settings.showSavedResults ?? false;
+  renderResultButton.textContent = showSavedResults
+    ? "Hide Saved Results"
+    : "Show Saved Results";
 
   const sortSelect = document.createElement("select");
   sortSelect.className = "MH_EXT_time_select";
   sortSelect.innerHTML = `
     <option value="symbol">Sort by Symbol</option>
+    <option value="changePct">Sort by Change %</option>
     <option value="gap">Sort by Price Gap</option>
+    <option value="volume">Sort by Strike Volume</option>
   `;
   sortSelect.value = settings.sort;
 
@@ -220,36 +247,72 @@ export function marketHunt() {
   container.className = "MH_EXT_market_hunt";
 
   const reRender = () => {
-    const stored = JSON.parse(localStorage.getItem("marketHuntResults") || "{}");
-    const existingData: Record<string, THuntAnalysis> = stored.data || {};
+    const stored = JSON.parse(localStorage.getItem(T_OTM_HUNT_STORAGE) || "{}");
+    const existingData: Record<string, TOTMHuntAnalysis> = stored.data || {};
     if (Object.keys(existingData).length > 0) {
-      renderMarketHunt(existingData, container, timingsContainer, stored.timestamps, analysisSelect.value, sortSelect.value);
+      renderMarketHunt({
+        data: existingData,
+        container,
+        timingsContainer,
+        timestamps: stored.timestamps,
+        sortBy: sortSelect.value,
+        expiry: stored.expiry,
+      });
     } else {
       container.innerHTML = "<p>No results found in storage</p>";
     }
   };
 
   const onSettingsChange = () => {
-    localStorage.setItem("marketHuntSettings", JSON.stringify({ analysis: analysisSelect.value, sort: sortSelect.value }));
+    saveSettings();
     reRender();
   };
-  analysisSelect.onchange = onSettingsChange;
+
   sortSelect.onchange = onSettingsChange;
 
+  const saveSettings = () => {
+    localStorage.setItem(
+      "marketHuntSettings",
+      JSON.stringify({
+        sort: sortSelect.value,
+        showSavedResults,
+      }),
+    );
+  };
+
+  if (showSavedResults) reRender();
+
   renderResultButton.onclick = () => {
-    container.innerHTML = "";
-    reRender();
+    showSavedResults = !showSavedResults;
+    renderResultButton.textContent = showSavedResults
+      ? "Hide Saved Results"
+      : "Show Saved Results";
+    if (showSavedResults) {
+      reRender();
+    } else {
+      container.innerHTML = "";
+      timingsContainer.innerHTML = "";
+    }
+    saveSettings();
   };
 
   huntButton.onclick = async () => {
     const batchNumber = Number(batchSelect.value);
     huntButton.disabled = true;
-    container.innerHTML = "";
+
+    // Overlay on wrapper so replaceChildren inside container doesn't remove it
+    wrapper.style.position = "relative";
+    const overlay = document.createElement("div");
+    overlay.className = "MH_EXT_loading_overlay";
+    overlay.textContent = "Scanning...";
+    wrapper.appendChild(overlay);
 
     const batchSize = Math.ceil(F_N_O_STOCKS.length / 5);
     const startIndex = (batchNumber - 1) * batchSize;
     const endIndex = startIndex + batchSize;
     const batchStocks = F_N_O_STOCKS.slice(startIndex, endIndex);
+    const monthlyExpiries = getMonthlyExpiries();
+    const nextMonthlyExpiry = monthlyExpiries[1];
     // console.log("batchStocks", batchStocks);
 
     for (let i = 0; i < batchStocks.length; i += 5) {
@@ -262,12 +325,12 @@ export function marketHunt() {
       );
 
       const stored = JSON.parse(
-        localStorage.getItem("marketHuntResults") || "{}",
+        localStorage.getItem(T_OTM_HUNT_STORAGE) || "{}",
       );
-      const existingData: Record<string, THuntAnalysis> = stored.data || {};
+      const existingData: Record<string, TOTMHuntAnalysis> = stored.data || {};
 
       data.forEach((res) => {
-        if ('error' in res) {
+        if ("error" in res) {
           console.warn(`Skipping ${res.symbol} due to error: ${res.message}`);
           return;
         }
@@ -278,11 +341,18 @@ export function marketHunt() {
 
       const timestamps = stored.timestamps || {};
       timestamps[`batch${batchNumber}`] = Date.now();
-      renderMarketHunt(existingData, container, timingsContainer, timestamps, analysisSelect.value, sortSelect.value);
+      renderMarketHunt({
+        data: existingData,
+        container,
+        timingsContainer,
+        timestamps,
+        sortBy: sortSelect.value,
+        expiry: nextMonthlyExpiry,
+      });
 
       localStorage.setItem(
-        "marketHuntResults",
-        JSON.stringify({ data: existingData, timestamps }),
+        T_OTM_HUNT_STORAGE,
+        JSON.stringify({ data: existingData, timestamps, expiry: nextMonthlyExpiry }),
       );
 
       if (i + 5 < batchStocks.length) {
@@ -290,11 +360,20 @@ export function marketHunt() {
       }
     }
 
-    huntButton.textContent = "Start Hunt";
+    overlay.remove();
+    huntButton.textContent = "Scan FnO Stocks";
     huntButton.disabled = false;
   };
 
-  wrapper.append(batchSelect, huntButton, renderResultButton, clearButton, analysisSelect, sortSelect, timingsContainer, container);
+  wrapper.append(
+    batchSelect,
+    huntButton,
+    renderResultButton,
+    clearButton,
+    sortSelect,
+    timingsContainer,
+    container,
+  );
   document
     .querySelector(".app-container")
     ?.insertAdjacentElement("afterend", wrapper);

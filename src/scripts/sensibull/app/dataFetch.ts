@@ -1,4 +1,4 @@
-import { getExpiriesFromDOM } from "@src/scripts/sensibull/app/htmlParser";
+import { getExpiriesFromDOM, getMonthlyExpiries } from "@src/scripts/sensibull/app/htmlParser";
 import {
   getFromTimeUTC,
   getSymbol,
@@ -61,29 +61,17 @@ export async function fetchStockOIChange(
   time: TTimeSlot,
   show_oi: boolean = false,
 ): Promise<OIDataResult> {
-  const expiries = getExpiriesFromDOM();
-  const now = new Date();
-  const monthlyExpiries = Object.keys(expiries)
-    .filter((date) => !expiries[date].is_weekly)
-    .sort();
+  const monthlyExpiries = getMonthlyExpiries();
   const currentMonthly = monthlyExpiries[0];
-  const daysUntilExpiry =
-    (new Date(currentMonthly).getTime() - now.getTime()) /
-    (1000 * 60 * 60 * 24);
-  const selectedDate =
-    daysUntilExpiry >= 4
-      ? currentMonthly
-      : monthlyExpiries[monthlyExpiries.indexOf(currentMonthly) + 1];
-  const nextMonthly =
-    monthlyExpiries[monthlyExpiries.indexOf(currentMonthly) + 1];
+  const nextMonthly = monthlyExpiries[1];
   const finalExpiries = {
     [currentMonthly]: {
       is_weekly: false,
-      is_enabled: selectedDate === currentMonthly,
+      is_enabled: false,
     },
     [nextMonthly]: {
       is_weekly: false,
-      is_enabled: selectedDate === nextMonthly,
+      is_enabled: true,
     },
   };
   return fetchOIData(symbol, finalExpiries, time, show_oi);

@@ -206,16 +206,7 @@ export const NIFTY_50_STOCKS: TStock[] = [
 ];
 
 export const F_N_O_STOCKS_TEST: string[] = [
-  "360ONE",
-  "ABB",
-  "ABCAPITAL",
-  "ADANIENSOL",
-  "ADANIENT",
-  "ADANIGREEN",
-  "ADANIPORTS",
-  "ALKEM",
-  "AMBER",
-  "AMBUJACEM",
+  "BLUESTARCO"
 ];
 
 export const F_N_O_STOCKS: string[] = [
