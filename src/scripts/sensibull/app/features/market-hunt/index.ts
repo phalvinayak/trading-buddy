@@ -139,6 +139,8 @@ function renderMarketHunt({
       .join("");
   }
 
+  const activeSymbol = new URLSearchParams(window.location.search).get("tradingsymbol");
+
   const createList = (items: TOTMHuntAnalysis[], isBull: boolean) => {
     const list = document.createElement("ul");
     list.className = `MH_EXT_hunt_list ${isBull ? "bull" : "bear"}`;
@@ -152,7 +154,7 @@ function renderMarketHunt({
 
     items.forEach((item) => {
       const listItem = document.createElement("li");
-      listItem.className = "MH_EXT_hunt_item";
+      listItem.className = `MH_EXT_hunt_item${item.symbol === activeSymbol ? " MH_EXT_hunt_item--active" : ""}`;
       const highestOi = isBull
         ? item.highestPutOiChangeStrike
         : item.highestCallOiChangeStrike;
@@ -240,6 +242,14 @@ export function marketHunt() {
   `;
   sortSelect.value = settings.sort;
 
+  const expirySelect = document.createElement("select");
+  expirySelect.className = "MH_EXT_time_select";
+  expirySelect.innerHTML = `
+    <option value="current">Current Month</option>
+    <option value="next">Next Month</option>
+  `;
+  expirySelect.value = settings.expiryMonth ?? "next";
+
   const timingsContainer = document.createElement("div");
   timingsContainer.className = "MH_EXT_batch_timings";
 
@@ -269,6 +279,7 @@ export function marketHunt() {
   };
 
   sortSelect.onchange = onSettingsChange;
+  expirySelect.onchange = onSettingsChange;
 
   const saveSettings = () => {
     localStorage.setItem(
@@ -276,6 +287,7 @@ export function marketHunt() {
       JSON.stringify({
         sort: sortSelect.value,
         showSavedResults,
+        expiryMonth: expirySelect.value,
       }),
     );
   };
@@ -297,6 +309,15 @@ export function marketHunt() {
   };
 
   huntButton.onclick = async () => {
+    if (!window.location.href.includes("/oi-change-vs-strike")) {
+      if (
+        confirm("You need to be on the Open Interest page. Navigate there now?")
+      ) {
+        window.location.href =
+          "https://web.sensibull.com/open-interest/oi-change-vs-strike?tradingsymbol=NIFTY";
+      }
+      return;
+    }
     const batchNumber = Number(batchSelect.value);
     huntButton.disabled = true;
 
@@ -312,7 +333,9 @@ export function marketHunt() {
     const endIndex = startIndex + batchSize;
     const batchStocks = F_N_O_STOCKS.slice(startIndex, endIndex);
     const monthlyExpiries = getMonthlyExpiries();
-    const nextMonthlyExpiry = monthlyExpiries[1];
+    const expiryValue = expirySelect.value as "current" | "next";
+    const nextMonthlyExpiry =
+      monthlyExpiries[expiryValue === "current" ? 0 : 1];
     // console.log("batchStocks", batchStocks);
 
     for (let i = 0; i < batchStocks.length; i += 5) {
@@ -321,7 +344,14 @@ export function marketHunt() {
       huntButton.textContent = `Fetching... ${progress}`;
 
       const data = await Promise.all(
-        batch.map((stock) => fetchStockOIChange(stock, 300, true)),
+        batch.map((stock) =>
+          fetchStockOIChange({
+            symbol: stock,
+            time: 300,
+            show_oi: true,
+            expiry: expiryValue,
+          }),
+        ),
       );
 
       const stored = JSON.parse(
@@ -352,7 +382,11 @@ export function marketHunt() {
 
       localStorage.setItem(
         T_OTM_HUNT_STORAGE,
-        JSON.stringify({ data: existingData, timestamps, expiry: nextMonthlyExpiry }),
+        JSON.stringify({
+          data: existingData,
+          timestamps,
+          expiry: nextMonthlyExpiry,
+        }),
       );
 
       if (i + 5 < batchStocks.length) {
@@ -366,6 +400,7 @@ export function marketHunt() {
   };
 
   wrapper.append(
+    expirySelect,
     batchSelect,
     huntButton,
     renderResultButton,

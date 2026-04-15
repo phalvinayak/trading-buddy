@@ -56,20 +56,30 @@ export async function fetchOIChangeData(
   return fetchOIData(pageSymbol, expiries, time);
 }
 
-export async function fetchStockOIChange(
-  symbol: string,
-  time: TTimeSlot,
-  show_oi: boolean = false,
-): Promise<OIDataResult> {
+type FetchStockOIChangeParams = {
+  symbol: string;
+  time: TTimeSlot;
+  show_oi?: boolean;
+  expiry?: "current" | "next";
+};
+
+export async function fetchStockOIChange({
+  symbol,
+  time,
+  show_oi = false,
+  expiry = "next",
+}: FetchStockOIChangeParams): Promise<OIDataResult> {
   const monthlyExpiries = getMonthlyExpiries();
   const currentMonthly = monthlyExpiries[0];
   const nextMonthly = monthlyExpiries[1];
+  const enabledExpiry = expiry === "current" ? currentMonthly : nextMonthly;
+  const disabledExpiry = expiry === "current" ? nextMonthly : currentMonthly;
   const finalExpiries = {
-    [currentMonthly]: {
+    [disabledExpiry]: {
       is_weekly: false,
       is_enabled: false,
     },
-    [nextMonthly]: {
+    [enabledExpiry]: {
       is_weekly: false,
       is_enabled: true,
     },

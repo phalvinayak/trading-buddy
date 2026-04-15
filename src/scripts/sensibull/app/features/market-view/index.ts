@@ -74,7 +74,7 @@ export function broaderMarketView() {
       marketDataBtn.textContent = `Fetching... ${progress}`;
 
       const data = await Promise.all(
-        batch.map((stock) => fetchStockOIChange(stock.symbol, timeframe)),
+        batch.map((stock) => fetchStockOIChange({ symbol: stock.symbol, time: timeframe })),
       );
 
       data.forEach((d, idx) => {

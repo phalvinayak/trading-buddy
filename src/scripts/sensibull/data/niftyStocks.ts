@@ -205,9 +205,7 @@ export const NIFTY_50_STOCKS: TStock[] = [
   },
 ];
 
-export const F_N_O_STOCKS_TEST: string[] = [
-  "BLUESTARCO"
-];
+export const F_N_O_STOCKS_TEST: string[] = ["BLUESTARCO"];
 
 export const F_N_O_STOCKS: string[] = [
   "360ONE",
@@ -217,6 +215,7 @@ export const F_N_O_STOCKS: string[] = [
   "ADANIENT",
   "ADANIGREEN",
   "ADANIPORTS",
+  "ADANIPOWER",
   "ALKEM",
   "AMBER",
   "AMBUJACEM",
@@ -255,6 +254,7 @@ export const F_N_O_STOCKS: string[] = [
   "CHOLAFIN",
   "CIPLA",
   "COALINDIA",
+  "COCHINSHIP",
   "COFORGE",
   "COLPAL",
   "CONCOR",
@@ -272,10 +272,12 @@ export const F_N_O_STOCKS: string[] = [
   "ETERNAL",
   "EXIDEIND",
   "FEDERALBNK",
+  "FORCEMOT",
   "FORTIS",
   "GAIL",
   "GLENMARK",
   "GMRAIRPORT",
+  "GODFRYPHLP",
   "GODREJCP",
   "GODREJPROP",
   "GRASIM",
@@ -291,6 +293,7 @@ export const F_N_O_STOCKS: string[] = [
   "HINDUNILVR",
   "HINDZINC",
   "HUDCO",
+  "HYUNDAI",
   "ICICIBANK",
   "ICICIGI",
   "ICICIPRULI",
@@ -337,8 +340,10 @@ export const F_N_O_STOCKS: string[] = [
   "MCX",
   "MFSL",
   "MOTHERSON",
+  "MOTILALOFS",
   "MPHASIS",
   "MUTHOOTFIN",
+  "NAM-INDIA",
   "NATIONALUM",
   "NAUKRI",
   "NBCC",
@@ -381,7 +386,6 @@ export const F_N_O_STOCKS: string[] = [
   "SBICARD",
   "SBILIFE",
   "SBIN",
-  "SENSEX",
   "SHREECEM",
   "SHRIRAMFIN",
   "SIEMENS",
@@ -392,7 +396,6 @@ export const F_N_O_STOCKS: string[] = [
   "SUPREMEIND",
   "SUZLON",
   "SWIGGY",
-  "SYNGENE",
   "TATACONSUM",
   "TATAELXSI",
   "TATAPOWER",
@@ -414,6 +417,7 @@ export const F_N_O_STOCKS: string[] = [
   "UPL",
   "VBL",
   "VEDL",
+  "VMM",
   "VOLTAS",
   "WAAREEENER",
   "WIPRO",
